@@ -1,0 +1,68 @@
+body,
+html {
+  height: max-content;
+  min-height: 100%;
+  width: 100%;
+}
+
+body {
+  font-family: "Fira Sans", sans-serif;
+  background: #2980b9; /* fallback for old browsers */
+  background: -webkit-linear-gradient(
+    to top,
+    #2c3e50,
+    #2980b9
+  ); /* Chrome 10-25, Safari 5.1-6 */
+  background: linear-gradient(
+    to top,
+    #2c3e50,
+    #2980b9
+  ); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+}
+
+a {
+  color: #0072bb;
+}
+
+.jumbotron {
+  margin: auto;
+  width: 75%;
+  margin-top: 3rem;
+}
+
+.main-title {
+  margin: auto;
+  text-align: center;
+  background-color: #4f4e4ef5;
+  color: #ffffff;
+}
+
+.title {
+  margin: auto;
+  text-align: center;
+  color: #17a2b8;
+}
+
+.nav-wallet {
+  text-align: center;
+  background-color: #e9ecef;
+  color: #17a2b8;
+}
+
+.btns-admin {
+  text-align: end;
+}
+
+.btns-admin .btn {
+  margin-left: 0.5rem;
+}
+
+.card-manage {
+  margin: auto;
+  width: 30rem;
+}
+
+.btn-footer {
+  display: flex;
+  justify-content: space-evenly;
+}

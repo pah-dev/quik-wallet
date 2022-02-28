@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>{{.subtitle}}</title>
+    <link
+      rel="stylesheet"
+      href="https://cdn.jsdelivr.net/npm/bootstrap@4.5.3/dist/css/bootstrap.min.css"
+      integrity="sha384-TX8t27EcRE3e/ihU7zmQxVncDAy5uIKz4rEkgIXeMed4M0jlfIDPvg6uqKI2xXr2"
+      crossorigin="anonymous"
+    />
+    <link rel="stylesheet" href="/static/styles.css" />
+  </head>
+  <body>
+    {{ template "header.html" .}} {{range .MsgInfo}}
+    <div class="alert alert-info alert-dismissible fade show" role="alert">
+      {{.}}
+      <button
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {{end}} {{range .MsgWarn}}
+    <div class="alert alert-warning alert-dismissible fade show" role="alert">
+      {{.}}
+      <button
+        type="button"
+        class="close"
+        data-dismiss="alert"
+        aria-label="Close"
+      >
+        <span aria-hidden="true">&times;</span>
+      </button>
+    </div>
+    {{end}}
+    <div>
+      <div class="jumbotron">
+        <div class="title">
+          <h4>{{ .subtitle }}</h4>
+        </div>
+        <div class="row"><br /></div>
+        <div class="row">
+          <form
+            class="card-manage"
+            action="/api/v1/wallets/{{ .wallet.ID }}/{{ .operation }}"
+            method="post"
+          >
+            <div class="card border-info">
+              <div class="card-body">
+                <div class="row">
+                  <div class="col-md-9">
+                    <h5 class="card-title">{{ .wallet.Alias }}</h5>
+                    <h6 class="card-text">{{ .wallet.Hash }}</h6>
+                    <br />
+                    <div>
+                      <div>
+                        <label for="balance">Balance </label>
+                      </div>
+                      <div>
+                        <input
+                          type="text"
+                          name="balance"
+                          disabled
+                          value="{{ .wallet.Balance }}"
+                        />
+                      </div>
+                      <br />
+                      <div>
+                        <label for="amount">Amount</label>
+                      </div>
+                      <div>
+                        <input type="text" name="amount" />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="card-footer btn-footer">
+                <input
+                  class="btn btn-info"
+                  type="submit"
+                  value="{{ .operation }}"
+                />
+              </div>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+    {{ template "footer.html" .}}
+  </body>
+</html>
