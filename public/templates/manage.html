@@ -71,18 +71,19 @@
             </div>
             {{ if eq .operation "balance" }}
             <div class="card-footer btn-footer">
-              <a class="btn btn-info" href="/api/v1/wallets">return</a>
+              <a class="btn btn-info" href="/public/wallets">return</a>
             </div>
             {{ else }}
             <div class="card-footer btn-footer">
               <a
                 class="btn btn-info"
-                href="/api/v1/wallets/{{ .wallet.ID }}/manage/credit"
+                href="/public/wallets/{{ .wallet.ID }}/manage/credit"
                 >credit</a
               >
+              <a class="btn btn-info" href="/public/wallets">return</a>
               <a
                 class="btn btn-info"
-                href="/api/v1/wallets/{{ .wallet.ID }}/manage/debit"
+                href="/public/wallets/{{ .wallet.ID }}/manage/debit"
                 >debit</a
               >
             </div>

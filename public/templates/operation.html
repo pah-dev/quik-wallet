@@ -48,7 +48,7 @@
         <div class="row">
           <form
             class="card-manage"
-            action="/api/v1/wallets/{{ .wallet.ID }}/{{ .operation }}"
+            action="/public/wallets/{{ .wallet.ID }}/{{ .operation }}"
             method="post"
           >
             <div class="card border-info">
@@ -87,6 +87,7 @@
                   type="submit"
                   value="{{ .operation }}"
                 />
+                <a class="btn btn-info" href="/public/wallets">return</a>
               </div>
             </div>
           </form>

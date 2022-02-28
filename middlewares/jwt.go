@@ -11,13 +11,15 @@ import (
 // JWT is jwt middleware
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		var code int
+		code := 200
 		var data interface{}
-		token := c.Query("token")
-		if token == "" {
+		const BEARER_SCHEMA = "Bearer "
+		authHeader := c.GetHeader("Authorization")
+		if authHeader == "" {
 			code = 400
 		} else {
-			_, err := utils.ParseToken(token)
+			tokenString := authHeader[len(BEARER_SCHEMA):]
+			_, err := utils.ParseToken(tokenString)
 			if err != nil {
 				switch err.(*jwt.ValidationError).Errors {
 				case jwt.ValidationErrorExpired:

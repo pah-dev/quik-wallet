@@ -1,9 +1,13 @@
 package controllers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
+	"github.com/go-redis/redis/v8"
 	"github.com/pah-dev/quik-wallet/configs"
 	"github.com/pah-dev/quik-wallet/models"
 	"github.com/sirupsen/logrus"
@@ -32,17 +36,23 @@ func (w *WalletController) GetWalletByID(c *gin.Context) {
 	}
 }
 
-func (w *WalletController) Balance(c *gin.Context){
+func (w *WalletController) Balance(c *gin.Context, api bool){
 	var wallet models.Wallet
 	session := configs.Default(c)
 	id := c.Params.ByName("id")
 	db := c.MustGet("db").(*gorm.DB)
+	cache := c.MustGet("cache").(*redis.Client)
 	err := models.WalletModel.GetWalletByID(db, &wallet, id)
 	if err != nil {
 		logrus.Warn(err.Error())
 		session.AddFlash(err, "Warn")
 		session.Save()
 	} else {
+		body, _ := json.Marshal(wallet)
+		cacheErr := cache.Set(c, fmt.Sprint(wallet.ID), body, 5*time.Minute).Err()
+		if cacheErr != nil {
+			logrus.Warn(cacheErr.Error())
+		}
 		info := gin.H{
 			"operation": "Balance",
 			"amount": wallet.Balance,
@@ -50,13 +60,17 @@ func (w *WalletController) Balance(c *gin.Context){
 			"hash": wallet.Hash,
 		}
 		Log.CreateLog(c, info)
-		data := gin.H{
-			"title":  "Quik Wallets",
-			"subtitle":  "BALANCE",
-			"operation": "balance",
-			"wallet": wallet,
+		if api {
+			c.JSON(http.StatusOK, wallet)
+		}else{
+			data := gin.H{
+				"title":  "Quik Wallets",
+				"subtitle":  "BALANCE",
+				"operation": "balance",
+				"wallet": wallet,
+			}
+			c.HTML(http.StatusOK, "manage.html", data)
 		}
-		c.HTML(http.StatusOK, "manage.html", data)
 	}
 }
 
@@ -84,7 +98,7 @@ func (w *WalletController) Manage(c *gin.Context){
 	}
 }
 
-func (w *WalletController) Credit(c *gin.Context){
+func (w *WalletController) Credit(c *gin.Context, api bool){
 	var wallet models.UpdateWallet
 	var oldWallet models.Wallet
 	session := configs.Default(c)
@@ -118,19 +132,23 @@ func (w *WalletController) Credit(c *gin.Context){
 		}
 		Log.CreateLog(c, info)
 	}
-	data := gin.H{
-		"title":  "Quik Wallets",
-		"subtitle":  "CREDIT",
-		"error": err,
-		"operation": "credit",
-		"wallet": oldWallet,
-		"MsgInfo": session.Flashes("Info"),
-		"MsgWarn": session.Flashes("Warn"),
+	if api{
+		c.JSON(http.StatusOK, oldWallet)
+	}else{
+		data := gin.H{
+			"title":  "Quik Wallets",
+			"subtitle":  "CREDIT",
+			"error": err,
+			"operation": "credit",
+			"wallet": oldWallet,
+			"MsgInfo": session.Flashes("Info"),
+			"MsgWarn": session.Flashes("Warn"),
+		}
+		c.HTML(http.StatusOK, "operation.html", data)
 	}
-	c.HTML(http.StatusOK, "operation.html", data)
 }
 
-func (w *WalletController) Debit(c *gin.Context){
+func (w *WalletController) Debit(c *gin.Context, api bool){
 	var wallet models.UpdateWallet
 	var oldWallet models.Wallet
 	session := configs.Default(c)
@@ -160,25 +178,30 @@ func (w *WalletController) Debit(c *gin.Context){
 		session.Save()
 	}else{
 		info := gin.H{
-		   "operation": "Debit",
-		   "amount": form.Amount,
-		   "wallet": oldWallet,
-	   }
-	   Log.CreateLog(c, info)
+			"operation": "Credit",
+			"amount": form.Amount,
+			"id": oldWallet.ID,
+			"hash": oldWallet.Hash,
+		}
+		Log.CreateLog(c, info)
    	}
-	data := gin.H{
-		"title":  "Quik Wallets",
-		"subtitle":  "DEBIT",
-		"error": err,
-		"operation": "debit",
-		"wallet": oldWallet,
-		"MsgInfo": session.Flashes("Info"),
-		"MsgWarn": session.Flashes("Warn"),
+	if api{
+		c.JSON(http.StatusOK, oldWallet)
+	}else{
+		data := gin.H{
+			"title":  "Quik Wallets",
+			"subtitle":  "DEBIT",
+			"error": err,
+			"operation": "debit",
+			"wallet": oldWallet,
+			"MsgInfo": session.Flashes("Info"),
+			"MsgWarn": session.Flashes("Warn"),
+		}
+		c.HTML(http.StatusOK, "operation.html", data)
 	}
-	c.HTML(http.StatusOK, "operation.html", data)
 }
 
-func (w *WalletController) ShowAll(c *gin.Context) {
+func (w *WalletController) List(c *gin.Context, api bool) {
 	var wallets []models.Wallet
 	session := configs.Default(c)
 	db := c.MustGet("db").(*gorm.DB)
@@ -189,9 +212,13 @@ func (w *WalletController) ShowAll(c *gin.Context) {
 		session.Save()
 		c.AbortWithStatus(http.StatusNotFound)
 	}
-	data := gin.H{
-		"title":  "Quik Wallets",
-		"wallets": wallets,
+	if api {
+		c.JSON(http.StatusOK, wallets)
+	}else{
+		data := gin.H{
+			"title":  "Quik Wallets",
+			"wallets": wallets,
+		}
+		c.HTML(http.StatusOK, "index.html", data)
 	}
-	c.HTML(http.StatusOK, "index.html", data)
 }
