@@ -3,8 +3,8 @@ package middlewares
 import (
 	"net/http"
 
-	"github.com/dgrijalva/jwt-go"
 	"github.com/gin-gonic/gin"
+	"github.com/golang-jwt/jwt"
 	"github.com/pah-dev/quik-wallet/utils"
 )
 
