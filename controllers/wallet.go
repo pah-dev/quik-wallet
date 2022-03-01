@@ -21,7 +21,7 @@ type WalletController struct {
 }
 
 type OpForm struct {
-    Amount  float32 `form:"amount"`
+    Amount  float32 `json:"amount" form:"amount"`
 }
 
 func (w *WalletController) GetWalletByID(c *gin.Context) {
@@ -49,7 +49,7 @@ func (w *WalletController) Balance(c *gin.Context, api bool){
 		session.Save()
 	} else {
 		body, _ := json.Marshal(wallet)
-		cacheErr := cache.Set(c, fmt.Sprint(wallet.ID), body, 5*time.Minute).Err()
+		cacheErr := cache.Set(c, fmt.Sprint(wallet.ID), body, 2*time.Minute).Err()
 		if cacheErr != nil {
 			logrus.Warn(cacheErr.Error())
 		}
@@ -101,12 +101,15 @@ func (w *WalletController) Manage(c *gin.Context){
 func (w *WalletController) Credit(c *gin.Context, api bool){
 	var wallet models.UpdateWallet
 	var oldWallet models.Wallet
+	error := ""
 	session := configs.Default(c)
 	id := c.Params.ByName("id")
 	db := c.MustGet("db").(*gorm.DB)
 	form := &OpForm{}
 	if err := c.ShouldBind(form); err != nil {
 		logrus.Warn(err.Error())
+		session.AddFlash("Invalid amount", "Warn")
+		session.Save()
 		c.AbortWithError(http.StatusBadRequest, err)
 		return
 	}
@@ -120,6 +123,7 @@ func (w *WalletController) Credit(c *gin.Context, api bool){
 	wallet = models.UpdateWallet{ Credit: form.Amount, Debit: 0 }
 	err = models.WalletModel.CreditWallet(db, &oldWallet, &wallet)
 	if err != nil {
+		error = err.Error()
 		logrus.Warn(err.Error())
 		session.AddFlash(err, "Warn")
 		session.Save()
@@ -133,7 +137,9 @@ func (w *WalletController) Credit(c *gin.Context, api bool){
 		Log.CreateLog(c, info)
 	}
 	if api{
-		c.JSON(http.StatusOK, oldWallet)
+		c.JSON(http.StatusOK, gin.H{
+			"error": error,
+			"data": oldWallet })
 	}else{
 		data := gin.H{
 			"title":  "Quik Wallets",
@@ -151,6 +157,7 @@ func (w *WalletController) Credit(c *gin.Context, api bool){
 func (w *WalletController) Debit(c *gin.Context, api bool){
 	var wallet models.UpdateWallet
 	var oldWallet models.Wallet
+	error := ""
 	session := configs.Default(c)
 	id := c.Params.ByName("id")
 	db := c.MustGet("db").(*gorm.DB)
@@ -173,6 +180,7 @@ func (w *WalletController) Debit(c *gin.Context, api bool){
 	wallet = models.UpdateWallet{ Credit: 0, Debit: form.Amount }
 	err = models.WalletModel.DebitWallet(db, &oldWallet, &wallet)
 	if err != nil {
+		error = err.Error()
 		logrus.Warn(err.Error())
 		session.AddFlash(err, "Warn")
 		session.Save()
@@ -186,7 +194,9 @@ func (w *WalletController) Debit(c *gin.Context, api bool){
 		Log.CreateLog(c, info)
    	}
 	if api{
-		c.JSON(http.StatusOK, oldWallet)
+		c.JSON(http.StatusOK, gin.H{
+			"error": error,
+			"data": oldWallet })
 	}else{
 		data := gin.H{
 			"title":  "Quik Wallets",

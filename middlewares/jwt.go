@@ -11,12 +11,13 @@ import (
 // JWT is jwt middleware
 func JWT() gin.HandlerFunc {
 	return func(c *gin.Context) {
-		code := 200
-		var data interface{}
+		code := http.StatusOK
+		msg :=""
 		const BEARER_SCHEMA = "Bearer "
 		authHeader := c.GetHeader("Authorization")
 		if authHeader == "" {
-			code = 400
+			code = http.StatusBadRequest
+			msg = "Request parameter error"
 		} else {
 			tokenString := authHeader[len(BEARER_SCHEMA):]
 			_, err := utils.ParseToken(tokenString)
@@ -24,16 +25,17 @@ func JWT() gin.HandlerFunc {
 				switch err.(*jwt.ValidationError).Errors {
 				case jwt.ValidationErrorExpired:
 					code = 20002
+					msg = "Token authentication failed"
 				default:
 					code = 20001
+					msg = "Token has timed out"
 				}
 			}
 		}
-		if code != 200 {
+		if code != http.StatusOK {
 			c.JSON(http.StatusUnauthorized, gin.H{
 				"code": code,
-				"msg":  "Error",
-				"data": data,
+				"msg":  msg,
 			})
 			c.Abort()
 			return

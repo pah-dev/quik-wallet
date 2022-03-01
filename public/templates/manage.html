@@ -58,12 +58,8 @@
                       <label for="balance">Balance </label>
                     </div>
                     <div>
-                      <input
-                        type="text"
-                        name="balance"
-                        disabled
-                        value="{{ .wallet.Balance }}"
-                      />
+                      <input type="number" name="balance" disabled value="{{
+                      printf "%.2f" .wallet.Balance }}" />
                     </div>
                   </div>
                 </div>
